@@ -1,0 +1,8 @@
+# R-AoII reproducibility kit — Python 3.10+
+# Pinned to the versions the artifact was validated against; newer minors should also work.
+numpy>=1.26,<2.0
+scipy>=1.11
+sympy>=1.12
+numba>=0.59
+matplotlib>=3.7
+pytest>=7.4
