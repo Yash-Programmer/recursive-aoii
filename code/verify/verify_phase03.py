@@ -3,7 +3,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 import sympy as sp
-from raoii import theory, sim, lemma1, policy
+from raoii import theory, sim, lemma1, policy, joint
 
 np.set_printoptions(precision=4, suppress=True)
 print("=" * 70)
@@ -58,8 +58,10 @@ for (mu, nu) in [(2.0, 1.0), (3.0, 1.0), (1.0, 0.5)]:
           f"{'OK' if abs(m-closed)<=ci+1e-9 else 'MISS'}", flush=True)
 for K in (2, 3):
     mus = [2.0] * K
+    ex = joint.analyze(mus, 1.0)["raoii"]
     m, ci, _ = sim.mc_estimate(mus, 1.0, n_events=150_000, n_seeds=8, key="raoii")
-    print(f"  K={K} mu=2 nu=1: sim E[D^R_K]={m:.4f}+-{ci:.4f}  (no closed form claimed; LST recursion is OPEN 2.2)", flush=True)
+    print(f"  K={K} mu=2 nu=1: exact -pi_M^T A^-1 1 = {ex:.4f}  sim={m:.4f}+-{ci:.4f} "
+          f"{'OK' if abs(m-ex)<=ci+1e-9 else 'MISS'}", flush=True)
 
 # ---- 4. Theorem 3: the threshold finding --------------------------------------
 print("\n[4] THEOREM 3 (single-hop threshold) -- THE FINDING")

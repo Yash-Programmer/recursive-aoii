@@ -29,7 +29,7 @@ def main():
     rc = run([sys.executable, "-m", "pytest", "tests/", "-q"])
     assert rc == 0, "TESTS FAILED"
 
-    # 3. Experiments E1-E5 (full precision unless --fast)
+    # 3. Experiments E1-E6 (full precision unless --fast)
     if not fast:
         rc = run([sys.executable, "experiments/run_phase05.py"])
         assert rc == 0, "EXPERIMENTS FAILED"

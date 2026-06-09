@@ -17,7 +17,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-      - name: Reproduce (fast — symbolic checks + 36 tests + figures)
+      - name: Reproduce (fast — symbolic checks + 42 tests + figures)
         run: python code/reproduce.py --fast
       - name: Tier-2 lemma probes (universal age bound, NQD, causal independence)
         run: python code/verify/verify_strongaccept.py

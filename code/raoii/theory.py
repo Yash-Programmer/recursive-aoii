@@ -46,7 +46,12 @@ def raoii_K1_closed(mu, nu, q=0.0):
 
 
 def threshold(mu, nu, beta, q=0.0):
-    """theta = log(1/(1-2 beta alpha)) / (mu_tilde+2nu)  (symmetric-case fixed point)."""
+    """DEPRECATED / INCORRECT closed form (the original "D1" guess); retained ONLY as a
+    documented negative control. It does NOT solve the AoII scheduling problem: the correct
+    single-hop optimum is the transcendental fixed point eq:(foc), obtained by
+    policy.optimal_threshold_renewal / policy.threshold_for_budget and confirmed by
+    policy.single_hop_vi. This formula is off by a large factor (see
+    tests/test_phase03.py::test_thm3_d1_formula_is_wrong). Do not use it for any result."""
     mut = (1.0 - q) * mu
     a = alpha(mu, nu, q)
     arg = 1.0 - 2.0 * beta * a

@@ -1,13 +1,19 @@
 """Single-hop AoII SMDP via uniformized relative value iteration.
 
-Confirms (for Theorem 3): the optimal single-hop policy is a threshold on the
-disagreement age tau; the recovered threshold matches the closed form
-theta = log(1/(1-2 beta alpha))/(mu+2nu); and theta is non-increasing in the
-effective source rate nu (the monotonicity that drives the nesting).
+Confirms the paper's threshold theorem: the optimal single-hop policy is a
+threshold on the disagreement age tau, and at a fixed price beta the optimal
+threshold is INCREASING in the effective source rate nu (a faster symmetric
+source self-corrects, so patience is optimal); under a fixed rate cap the
+threshold is non-monotone in nu, which is why the equal-budget ordering is
+settled numerically (paper, nesting corollary). The naive closed form
+theta = log(1/(1-2 beta alpha))/(mu+2nu) kept in theory.threshold is a
+documented NEGATIVE CONTROL (it does not solve the problem); the ground truth
+is the renewal-reward optimum below, independently matched by value iteration.
 
 State (m, i): m in {0,1} disagreement of (source, estimate); i = age bin.
 Source = effective 2-state flip rate nu_eff; channel rate mu; transmit price beta.
-Full joint K=2,3 value iteration (the decoupling-gap probe) is experiment E3.
+The exact joint benchmark over the threshold class is benchmark.py (E6, Table II);
+the unrestricted genie optimum is genie.py (E7).
 """
 import numpy as np
 from . import theory

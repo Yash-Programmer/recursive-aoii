@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 EXP = os.path.abspath(os.path.join(HERE, "..", "..", "experiments"))
 PLOTS = os.path.abspath(os.path.join(HERE, "..", "..", "figures", "plots"))
 os.makedirs(PLOTS, exist_ok=True)
-HALF = (3.4, 2.6)                                  # column width (inches)
+HALF = (2.9, 1.9)                                  # final printed size (in); included at ~0.85\columnwidth so fonts print 1:1
 plt.rcParams.update({"font.size": 8, "axes.grid": True, "grid.alpha": 0.3,
                      "figure.dpi": 150, "savefig.bbox": "tight"})
 
@@ -38,7 +38,7 @@ def fig_cascade_curve():
             ax.errorbar(Ks, sim, yerr=ci, fmt="o", ms=3, capsize=2, alpha=0.7)
     ax.axhline(0.5, ls="--", color="k", lw=0.8, label=r"$\frac{1}{2}$ (cascade limit)")
     ax.set_xlabel("hops $K$"); ax.set_ylabel(r"$p_K$ (end-to-end mismatch)")
-    ax.legend(fontsize=6); ax.set_title("End-to-end error probability: closed form vs simulation")
+    ax.legend(fontsize=6)
     fig.savefig(os.path.join(PLOTS, "F3_cascade_curve.pdf")); plt.close(fig)
 
 
@@ -50,7 +50,6 @@ def fig_bottleneck_heatmap():
     im = ax.pcolormesh(mus, nus, Z, cmap="cividis", shading="auto")
     fig.colorbar(im, ax=ax, label=r"$p_3$")
     ax.set_xlabel(r"bottleneck $\mu_1$"); ax.set_ylabel(r"flip rate $\nu$")
-    ax.set_title("Bottleneck: smallest $\\mu_k$ dominates $p_K$")
     fig.savefig(os.path.join(PLOTS, "F5_bottleneck.pdf")); plt.close(fig)
 
 
@@ -66,7 +65,7 @@ def fig_policy_comparison():
     ax.bar(range(len(keys)), vals, yerr=cis, capsize=3,
            color=plt.cm.viridis(np.linspace(0.15, 0.85, len(keys))))
     ax.set_xticks(range(len(keys))); ax.set_xticklabels([labels[k] for k in keys], rotation=20, fontsize=6)
-    ax.set_ylabel(r"avg R-AoII $\overline{\Delta^R_K}$"); ax.set_title("Policy comparison ($K=6$, common budget)")
+    ax.set_ylabel(r"avg R-AoII $\overline{\Delta^R_K}$")
     fig.savefig(os.path.join(PLOTS, "F6_policy_comparison.pdf")); plt.close(fig)
 
 
@@ -77,13 +76,16 @@ def fig_time_integral():
     for K in Ks:
         mus = [2.0] * K
         ex.append(joint.analyze(mus, 1.0)["raoii"])
-        m, c, _ = sim.mc_estimate(mus, 1.0, n_events=400_000, n_seeds=10, key="raoii")
+        m, c, _ = sim.mc_estimate(mus, 1.0, n_events=1_000_000, n_seeds=20, key="raoii")
         sm.append(m); ci.append(c)
+    aoi = [K * (1.0 / 2.0) for K in Ks]                  # E[AoI] = sum_k 1/mu_k (mu=2), grows linearly
     fig, ax = plt.subplots(figsize=HALF)
-    ax.plot(list(Ks), ex, "-o", ms=3, label=r"exact $-\pi_M^\top A^{-1}\mathbf{1}$")
+    ax.plot(list(Ks), aoi, "--", color="gray", lw=1.0,
+            label=r"$\mathbb{E}[\mathrm{AoI}]=\sum_k 1/\mu_k$ (freshness)")
+    ax.axhline(0.5, ls=":", color="k", lw=0.8, label=r"$1/(2\nu)$ bound")
+    ax.plot(list(Ks), ex, "-o", ms=3, label=r"exact $-\pi_M^\top A^{-1}\mathbf{1}$ (R-AoII)")
     ax.errorbar(list(Ks), sm, yerr=ci, fmt="s", ms=3, capsize=2, alpha=0.7, label="simulation")
-    ax.set_xlabel("hops $K$"); ax.set_ylabel(r"$\overline{\Delta^R_K}$ (R-AoII)")
-    ax.set_title(r"Mean Recursive AoII vs cascade length ($\mu{=}2,\nu{=}1$)")
+    ax.set_xlabel("hops $K$"); ax.set_ylabel(r"age")
     ax.legend(fontsize=6)
     fig.savefig(os.path.join(PLOTS, "F3b_time_integral.pdf")); plt.close(fig)
 
@@ -98,29 +100,28 @@ def fig_nesting():
     th_eq = [policy.threshold_for_budget(0.25, mus[k], nue[k]) for k in range(4)]
     fig, ax = plt.subplots(figsize=HALF)
     ax.plot(range(1, 5), th_ord, "-o", ms=4, label=r"ordered $\lambda$ (nests $\uparrow$)")
-    ax.plot(range(1, 5), th_eq, "-s", ms=4, label=r"equal $\lambda$ (reverses $\downarrow$)")
+    ax.plot(range(1, 5), th_eq, "-s", ms=4, label=r"equal $\lambda$ (non-monotone; here $\downarrow$)")
     ax.set_xlabel("hop index $k$"); ax.set_ylabel(r"threshold $\theta_k$"); ax.set_xticks(range(1, 5))
-    ax.set_title("Nesting: budget vs $\\nu_{eff}$ gradient"); ax.legend(fontsize=6)
+    ax.legend(fontsize=6)
     fig.savefig(os.path.join(PLOTS, "F4_nesting.pdf")); plt.close(fig)
 
 
 def fig_tandem_schematic():
     """F1: the K-hop tandem (source -> relays -> monitor)."""
-    fig, ax = plt.subplots(figsize=(6.5, 1.5)); ax.axis("off")
+    fig, ax = plt.subplots(figsize=(3.4, 1.0)); ax.axis("off")
     K = 4; xs = np.arange(K + 1)
     labels = [r"$X{=}\hat X_0$"] + [r"$\hat X_%d$" % k for k in range(1, K)] + [r"$\hat X_K$"]
     roles = ["source"] + ["relay"] * (K - 1) + ["monitor"]
     cols = plt.cm.viridis(np.linspace(0.2, 0.85, K + 1))
     for i, (x, lab, role, c) in enumerate(zip(xs, labels, roles, cols)):
-        ax.scatter([x], [0], s=900, color=c, zorder=3, edgecolor="k")
-        ax.text(x, 0, lab, ha="center", va="center", fontsize=7, color="w", zorder=4)
-        ax.text(x, -0.42, role, ha="center", va="center", fontsize=6, style="italic")
+        ax.scatter([x], [0], s=420, color=c, zorder=3, edgecolor="k", linewidth=0.6)
+        ax.text(x, 0, lab, ha="center", va="center", fontsize=6, color="w", zorder=4)
+        ax.text(x, -0.48, role, ha="center", va="center", fontsize=5.5, style="italic")
         if i < K:
-            ax.annotate("", xy=(x + 0.78, 0), xytext=(x + 0.22, 0),
-                        arrowprops=dict(arrowstyle="->", lw=1.2))
-            ax.text(x + 0.5, 0.22, r"$\mu_%d,q_%d$" % (i + 1, i + 1), ha="center", fontsize=6)
-    ax.set_xlim(-0.6, K + 0.6); ax.set_ylim(-0.7, 0.5)
-    ax.set_title("F1: $K$-hop tandem cascade", fontsize=8)
+            ax.annotate("", xy=(x + 0.74, 0), xytext=(x + 0.26, 0),
+                        arrowprops=dict(arrowstyle="->", lw=0.9))
+            ax.text(x + 0.5, 0.24, r"$\mu_%d,q_%d$" % (i + 1, i + 1), ha="center", fontsize=5.5)
+    ax.set_xlim(-0.6, K + 0.6); ax.set_ylim(-0.75, 0.55)
     fig.savefig(os.path.join(PLOTS, "F1_tandem.pdf")); plt.close(fig)
 
 
@@ -140,7 +141,7 @@ def fig_samplepath():
             age[i] = t[i] - U
         else:
             age[i] = 0.0; U = t[i]
-    fig, axs = plt.subplots(3, 1, figsize=(3.6, 3.4), sharex=True)
+    fig, axs = plt.subplots(3, 1, figsize=(3.0, 2.4), sharex=True)
     axs[0].step(t, Xt, where="post", lw=1.2, label=r"$X(t)$")
     axs[0].step(t, Xh + 0.04, where="post", lw=1.2, ls="--", label=r"$\hat X_K(t)$")
     axs[0].set_yticks([0, 1]); axs[0].legend(fontsize=6, loc="upper right"); axs[0].set_ylabel("state")
@@ -148,7 +149,6 @@ def fig_samplepath():
     axs[1].set_ylabel(r"$M_K^{e2e}$"); axs[1].set_yticks([0, 1])
     axs[2].plot(t, age, color="crimson", lw=1.3)
     axs[2].set_ylabel(r"$\Delta^R_K(t)$"); axs[2].set_xlabel("time $t$")
-    axs[0].set_title("F2: R-AoII = age of the current mismatch run", fontsize=8)
     fig.tight_layout()
     fig.savefig(os.path.join(PLOTS, "F2_samplepath.pdf")); plt.close(fig)
 
